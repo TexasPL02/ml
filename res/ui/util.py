@@ -182,16 +182,16 @@ def find_color(area, pattern, desc="多色",
 		desc, max_retries, interval, wait
 	)
 
-print("————————————————before")
+# print("————————————————before")
 # res = find_text_content(area=FULL_SRC,pattern="天机",desc = "摩尔线程")
 # res = find_text_any(area=FULL_SRC,pattern="天机")
 # res2 = find_text_base(area=FULL_SRC,pattern="天机",desc = "摩尔线程")
 # res = find_image(FULL_SRC,"2")
-res = find_color(FULL_SRC,"982,2428,#CF6D97|1018,2428,#F9FAFE|985,2454,#213166|1015,2454,#324E87","关闭")
-print("————————————————after")
-print(res)
+# res = find_color(FULL_SRC,"982,2428,#CF6D97|1018,2428,#F9FAFE|985,2454,#213166|1015,2454,#324E87","关闭")
+# print("————————————————after")
+# print(res)
 # click(res[0],res[1])
-end()
+# end()
 
 # 点击坐标
 
