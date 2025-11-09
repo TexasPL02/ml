@@ -41,10 +41,10 @@ def wrap_with_page_task(func):
 @wrap_with_page_task
 def 思绪漫步1():
 	click_a(A_D,1)
-	res = find_text_exist(meirilianxi,"练习","每日练习")
+	res = find_text_any(meirilianxi, "练习", "每日练习")
 	if res:
 		click_p(res)
-	if find_text(meirilianxi_lingqu,"已","已领取"):
+	if find_text_base(meirilianxi_lingqu,"已","已领取"):
 		logger.info("思绪漫步已领取")
 		return -1
 	to_page_main()
@@ -52,14 +52,14 @@ def 思绪漫步1():
 @wrap_with_page_task
 def 思绪漫步2():
 	click_a(A_D, 1)
-	click_p(find_text_exist(meirilianxi_lingqu,"领取奖励","领取奖励"),wait=0.5) and click_get(0.5)
+	click_p(find_text_any(meirilianxi_lingqu, "领取奖励", "领取奖励"), wait=0.5) and click_get(0.5)
 	click_back()
 	# 闪亮之旅层
 
 @wrap_with_page_main
 def 元气使用():
 	click_a(A_ICON)
-	res = find_text(yuanqishiyong,"使用","元气使用")
+	res = find_text_base(yuanqishiyong,"使用","元气使用")
 	if res:
 		click_p(res)
 		yuanqizhi_be = find_text_out(yuanqishibie, "", "元气值")
@@ -82,10 +82,10 @@ def 元气使用():
 @wrap_with_page_main
 def 好友():
 	if click_red(A_FRIEND):
-		summer = find_text(MSG_SUMMER,"时尚顾问","时尚顾问")
+		summer = find_text_base(MSG_SUMMER,"时尚顾问","时尚顾问")
 		if summer:
 			click_p(summer)
-			click_p(find_text(MSG_SUMMER_LQ,"领取","领取返利"))and click_get() and click_back()
+			click_p(find_text_base(MSG_SUMMER_LQ,"领取","领取返利"))and click_get() and click_back()
 		if click_red(TXL):
 			click_a(TXL_yijianzengsong) and click_a(TXL_LQtili) and click_a(TXL_YJLQ) and click_get() and click_close()
 		if click_red(wannashequ):
@@ -105,9 +105,9 @@ def 好友():
 def 礼物():
 	if find_img(A_GIFT, "gift", "礼物") and click_red(A_GIFT):
 		sleep(0.5)
-		click_a(GIFT_LEFT) and click_get(0.1) and click_p(find_text_exist(GIFT_CANLE,"取消","取消")) and sleep(0.5)
-		click_a(GIFT_RIGHT) and click_get(0.1) and click_p(find_text_exist(GIFT_CANLE,"取消","取消")) and sleep(0.5)
-		click_a(GIFT_LEFT) and click_get(0.1) and click_p(find_text_exist(GIFT_CANLE,"取消","取消")) and sleep(0.5)
+		click_a(GIFT_LEFT) and click_get(0.1) and click_p(find_text_any(GIFT_CANLE, "取消", "取消")) and sleep(0.5)
+		click_a(GIFT_RIGHT) and click_get(0.1) and click_p(find_text_any(GIFT_CANLE, "取消", "取消")) and sleep(0.5)
+		click_a(GIFT_LEFT) and click_get(0.1) and click_p(find_text_any(GIFT_CANLE, "取消", "取消")) and sleep(0.5)
 
 		to_page_main()
 
@@ -147,8 +147,8 @@ def 福利():
 				if not Shared():
 					break
 				click_p(find_img(A_BENEFITS_SHARE_Goto,"前往分享","前往分享"),wait=1)
-				click_p(find_text(A_paizhao,"拍照","拍照"),wait=1) and click_a(A_paizhao_qiezi,wait=1) and click_a(A_paizhao_SHare,wait=3)
-				click_p(find_img(A_paizhao_SHare_QQShare,"QQ", "前往QQ分享"),wait=2) and click_p(find_text(A_paizhao_SHare_QQShare_close,"关闭","关闭QQ分享"),wait=2) and click_get(0.5)
+				click_p(find_text_base(A_paizhao,"拍照","拍照"),wait=1) and click_a(A_paizhao_qiezi,wait=1) and click_a(A_paizhao_SHare,wait=3)
+				click_p(find_img(A_paizhao_SHare_QQShare,"QQ", "前往QQ分享"),wait=2) and click_p(find_text_base(A_paizhao_SHare_QQShare_close,"关闭","关闭QQ分享"),wait=2) and click_get(0.5)
 				click_back()
 				break
 
@@ -164,7 +164,7 @@ def 商业街():
 		for i in range(5):
 			click_red(A_SHOP_Gift) and click_get()
 			if click_p(find_img(A_SHOP_Gift,"每日福利礼盒","每日福利礼盒")):
-				click_p(find_text(A_buy,"购买","购买")) and click_get()
+				click_p(find_text_base(A_buy,"购买","购买")) and click_get()
 				if not find_red(A_SHOP_A):
 					break
 			moveUp(1072,2077,993,557)
@@ -221,7 +221,7 @@ def mail():
 @wrap_with_page_main
 def 日程():
 	if click_red(A_SCHEDULE):
-		click_p(find_text_exist(rich_yijianlq,"一键领取","一键领取"))
+		click_p(find_text_any(rich_yijianlq, "一键领取", "一键领取"))
 		sleep(1)
 
 		for i in range(6):
@@ -246,12 +246,12 @@ def 日程():
 @wrap_with_page_task
 def 代言女王():
 	if click_red(A_C):
-		click_red(meirixuanchuan) and click_p(find_text(kashixuanchuan,"宣传","开始宣传")) and click_get()
+		click_red(meirixuanchuan) and click_p(find_text_base(kashixuanchuan,"宣传","开始宣传")) and click_get()
 
 		c = [SNE_1,WST_2,YNS_3,BBL_4]
 		for f in c:
 			click_a(f)
-			if click_p(find_text(yijianshiqu, "拾取","一键拾取")):
+			if click_p(find_text_any(yijianshiqu,"一键拾取")):
 				click_blank(0.3)
 				click_blank(0.3)
 				click_blank(0.3)
@@ -259,7 +259,7 @@ def 代言女王():
 
 			sleep(0.5)
 			for i in range(5):
-				if find_text_exist(meirixuanchuan, "每日宣传", "每日宣传"):
+				if find_text_any(meirixuanchuan, "每日宣传", "每日宣传"):
 					break
 				click_back()
 
@@ -273,15 +273,15 @@ def 日常事件簿():
 	click_red(richangshijianbu_rect) and click_a(richangshijianbu_LQ) and click_get(0.3)
 
 	for i in range(5):
-		res1 = find_text_exist(richangshijianbu_range,"罕见","罕见")
+		res1 = find_text_any(richangshijianbu_range, "罕见", "罕见")
 		# res2 = find_text_exist(richangshijianbu_range,"难得","难得")
 		# res3 = find_text_exist(richangshijianbu_range,"日常","日常")
 		if res1:
 			break
-		elif (int(find_text_out(free_re_count,"免费","免费刷新次数")[0].text[-1]) >0
-			or find_text_exist(free_re_count,"钻石","钻石") is False
+		elif (int(find_text_out(free_re_count,"免费","免费刷新次数")[0].text[-1]) > 0
+		      or find_text_any(free_re_count, "钻石", "钻石") is False
 			):
-			click_p(find_text(richangshijianbu_re,"刷新","刷新"))
+			click_p(find_text_base(richangshijianbu_re,"刷新","刷新"))
 		sleep(0.5)
 
 	for i in range(4):

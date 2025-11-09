@@ -12,8 +12,8 @@ def test_text():
 	c = "测试——文本"
 	b2 = "反向测试"
 	c2 = "反向测试——文本"
-	p = find_text(a,b,b)
-	p2 = find_text(a,b2,b2)
+	p = find_text_base(a,b,b)
+	p2 = find_text_base(a,b2,b2)
 	# p = find_element("color",BACK_CLOSE,BACK_CLOSE_Color,"返回")
 	print("测试结果：",p)
 	print("________")

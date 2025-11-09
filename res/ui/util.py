@@ -1,36 +1,38 @@
-import logging
+from contextlib import contextmanager
 from time import sleep
 from random import randint
+import sys
+from typing import Callable, Optional, Tuple, Any, List
 
+
+from ascript.android import action
 from ascript.android.action import click
 from ascript.android.screen import FindColors, Ocr, FindImages
 from ascript.android.system import R
 
+import logging
 
-from contextlib import contextmanager
+
 # 相似度
 DIFF = 0.9
 
 # 最大尝试次数
-MAX_RETRIES = 3
+MAX_RETRIES = 1
 
 # 尝试间隔
-INTERVAL = 0.3
+INTERVAL = 0
 
 # 结束后等待时间
-WAIT = 0.2
+WAIT = 0.1
 
-# 打印日志
-ISPRINT = 0
+FULL_SRC = [0,0,1264,2780]
 
 # 配置日志
 logging.basicConfig(
 	level=logging.INFO,
-    format='(%(lineno)d行) %(funcName)s() : %(message)s'  # ← 关键：只保留消息
-    )
+	format='(%(lineno)d行) %(funcName)s() : %(message)s'  # ← 关键：只保留消息
+	)
 logger = logging.getLogger(__name__)
-
-
 
 @contextmanager
 def temp_log_level(logger_obj, temp_level):
@@ -46,120 +48,150 @@ def temp_log_level(logger_obj, temp_level):
 
 
 
-
+## 程序无法继续进行时调用，弹出提示框和提示内容
 def err(code=1,text="错误类型缺省"):
 	logger.error(text)
 	p = action.catch_click(f"程序出错，点击屏幕结束\n错误代码:{code}\n{text}")
-	quit()
+	sys.exit()
 
+## 程序结束时调用，弹出提示框和提示内容，提示内容默认为空
 def end(text = ''):
 	action.catch_click(f"程序结束，请点击屏幕\n{text}")
-	quit()
+	sys.exit()
 
 
-p = (0,0)
-# 寻找元素坐标_寻找类型（ 寻找区域， 寻找参数, 文本，打印日志）
-# 文字检测
-def find_text(area, pattern, name,
-              confidence=DIFF, max_retries=MAX_RETRIES, interval=INTERVAL, wait=WAIT,
-              isprint = ISPRINT):
-	res = []
-	isprint and logging.info(f"[文本]寻找'{name}'中……")
-	for i in range(max_retries):
-		res = (Ocr.paddleocr_v2(rect=area, pattern=pattern,confidence = confidence)
-		       or Ocr.mlkitocr_v2(rect=area, pattern=pattern))
-		if res is None:
-			sleep(interval)
-		else:
-			isprint and logging.info(f"[文本]寻找 成功'{name}':{res}")
-			res = (res[0].center_x, res[0].center_y)
-			break
+
+def _find_with_retry(
+	finder: Callable[[], Any],
+	desc = None,
+	max_retries: int = MAX_RETRIES,
+	interval: float = INTERVAL,
+	wait: float = WAIT,
+) -> Any:
+	"""
+	通用重试框架：执行 finder()，直到成功或耗尽重试次数。
+	- finder 应返回“真值”表示成功，None/[]/False 表示未找到。
+	- 成功时立即返回结果；失败返回 None。
+	"""
+	for _ in range(max_retries):
+		result = finder()
+		if result:  # 支持 list、对象、tuple 等非空即真
+			logger.info(f"寻找 成功：{result}")
+			sleep(wait)
+			return result
+		sleep(interval)
+	logger.info(f"寻找 失败")
+	sleep(wait)
+	return None
+
+# --- 文本策略 ---
+def _ocr_find_text(area, pattern, confidence):
+	res = Ocr.paddleocr_v2(rect=area, pattern=pattern, confidence=confidence)
 	if not res:
-		isprint and logging.warning(f"[文本]寻找 失败'{name}'（{max_retries}次）")
-	sleep(wait)
-	return res if res is not None else 0
+		res = Ocr.mlkitocr_v2(rect=area, pattern=pattern)
+	return (res[0].center_x, res[0].center_y) if res else None
 
-# 文字遍历检测
-def find_text_exist(area, pattern, name, confidence=DIFF,
-                    max_retries=MAX_RETRIES, interval=INTERVAL, wait=WAIT,
-                    isprint = ISPRINT):
-	isprint and logging.warning(f"[文本]寻找'{name}'中……")
-	for (i,s) in enumerate(pattern):
-		res = find_text(area, s, s,
-		                confidence, max_retries, interval, wait,
-		                isprint = 0)
-		if res:
-			isprint and logging.warning(f"[文本]寻找 成功'{name}'")
-			return res
-	else:
-		isprint and logging.warning(f"[文本]寻找 失败'{name}'")
-		return 0
-
-
-
-# 输出识别文字
-def find_text_out(area, pattern, name,
-                  confidence=DIFF, max_retries=MAX_RETRIES, interval=INTERVAL, wait=WAIT,
-                  isprint = ISPRINT):
-	res = []
-	isprint and logging.info(f"[文本]寻找'{name}'中……")
-	for i in range(max_retries):
-		res = (Ocr.paddleocr_v2(rect=area, pattern=pattern,confidence = confidence)
-		       or Ocr.mlkitocr_v2(rect=area, pattern=pattern))
-		if res is None:
-			# logging.info(f"第({i + 1})次未找到'{name}'")
-			sleep(interval)
-		else:
-			isprint and logging.info(f"[文本]寻找 成功'{name}':{res}")
-			# res = (res[0].center_x, res[0].center_y)
-			break
-	if not res :
-		isprint and logging.warning(f"[文本]寻找 失败'{name}'（{max_retries}次）")
-	sleep(wait)
-	return res if res is not None else 0
-
-
-def find_img(area, pattern, name,
-             confidence=DIFF, max_retries=MAX_RETRIES, interval=INTERVAL, wait=WAIT,
-              isprint = ISPRINT):
-	res = []
-	isprint and logging.info(f"[图片]寻找'{name}'中……")
-	for i in range(max_retries):
-		res = FindImages.find_template([R.img(f"{pattern}.png")], rect=area,
-		                               confidence=confidence)
-		if res is None:
-			# logging.info(f"第({i + 1})次未找到'{name}'")
-			sleep(interval)
-		else:
-			isprint and logging.info(f"[图片]寻找 成功'{name}':{res}")
-			res = (res['result'][0], res['result'][1])
-			break
-
+def _ocr_find_text_get(area, pattern, confidence):
+	res = Ocr.paddleocr_v2(rect=area, pattern=pattern, confidence=confidence)
 	if not res:
-		isprint and logging.warning(f"[图片]寻找 失败'{name}'（{max_retries}次）")
+		res = Ocr.mlkitocr_v2(rect=area, pattern=pattern)
+	return [item.text for item in res] if res else None
+
+# --- 图片策略 ---
+def _ocr_find_image(area, img_path, confidence):
+	results = FindImages.find_all_template([img_path], rect=area, confidence=confidence)
+	if results:
+		first = results[0]
+		return (int(first['center_x']), int(first['center_y']))
+	return None
+
+# --- 多色策略 ---
+def _ocr_find_color(area, pattern, diff):
+	results = FindColors.find(pattern, rect=area, diff=diff)
+	if results:
+		x, y = results.x, results.y
+		return (int(x), int(y))
+	return None
+
+
+# 方法1：寻找文本_base
+def find_text_base(area, pattern, desc=None,
+				   confidence=DIFF, max_retries=MAX_RETRIES,
+				   interval=INTERVAL, wait=WAIT):
+	if desc is None:
+		desc = str(pattern)
+	logger.info(f"寻找 '{desc}' ...")
+	return _find_with_retry(
+		lambda: _ocr_find_text(area, pattern, confidence),
+		desc, max_retries, interval, wait
+	)
+
+# 方法2：寻找文本_逐字（任意一字）
+def find_text_any(area, pattern, desc=None,
+                  confidence=DIFF, max_retries=MAX_RETRIES,
+                  interval=INTERVAL, wait=WAIT):
+	if desc is None:
+		desc = str(pattern)
+	logger.info(f"寻找 '{desc}' (逐字)...")
+	if not pattern:
+		return None
+	for char in pattern:
+		pos = find_text_base(area, char,
+							 confidence=confidence, max_retries=max_retries,
+							 interval=interval, wait=0)
+		if pos:
+			sleep(wait)
+			return pos
 	sleep(wait)
-	return res if res is not None else 0
+	return None
 
+# 方法3：输出找到的文字
+def find_text_out(area, pattern, desc=None,
+					  confidence=DIFF, max_retries=MAX_RETRIES,
+					  interval=INTERVAL, wait=WAIT):
+	if desc is None:
+		desc = str(pattern)
+	logger.info(f"寻找 '{desc}' ...")
+	return _find_with_retry(
+		lambda: _ocr_find_text_get(area, pattern, confidence),
+		desc, max_retries, interval, wait
+	) or []  # 确保返回 list 而非 None
 
-def find_color(area, pattern, name,
-               confidence=DIFF, max_retries=MAX_RETRIES, interval=INTERVAL, wait=WAIT,
-              isprint = ISPRINT):
-	res = []
-	isprint and logging.info(f"[图色]寻找'{name}'中……")
-	for i in range(max_retries):
-		res = FindColors.find(pattern, rect=area, diff=confidence)
-		if res is None:
-			# logging.info(f"第({i + 1})次未找到'{name}'")
-			sleep(interval)
-		else:
-			isprint and logging.info(f"[图色]寻找 成功'{name}':{res}")
-			res = (res.x, res.y)
-			break
-	if not res:
-		isprint and logging.warning(f"[图色]寻找 失败'{name}'（{max_retries}次）")
-	sleep(wait)
-	return res if res else 0
+# 方法4：寻找图片
+def find_img(area, pattern, desc=None,
+			   confidence=DIFF, max_retries=MAX_RETRIES,
+			   interval=INTERVAL, wait=WAIT):
+	if desc is None:
+		desc = str(pattern)
+	logger.info(f"寻找 '{desc}' ...")
+	img_path = R.img(f"{pattern}.png")
+	return _find_with_retry(
+		lambda: _ocr_find_image(area, img_path, confidence),
+		desc,max_retries, interval, wait
+	)
 
+# 方法5：多色寻找
+def find_color(area, pattern, desc="多色",
+					confidence=DIFF, max_retries=MAX_RETRIES,
+					interval=INTERVAL, wait=WAIT):
+	if desc is None:
+		desc = str(pattern)
+	logger.info(f"寻找 '{desc}' ...")
+	return _find_with_retry(
+		lambda: _ocr_find_color(area, pattern, confidence),
+		desc, max_retries, interval, wait
+	)
+
+print("————————————————before")
+# res = find_text_content(area=FULL_SRC,pattern="天机",desc = "摩尔线程")
+# res = find_text_any(area=FULL_SRC,pattern="天机")
+# res2 = find_text_base(area=FULL_SRC,pattern="天机",desc = "摩尔线程")
+# res = find_image(FULL_SRC,"2")
+res = find_color(FULL_SRC,"982,2428,#CF6D97|1018,2428,#F9FAFE|985,2454,#213166|1015,2454,#324E87","关闭")
+print("————————————————after")
+print(res)
+# click(res[0],res[1])
+end()
 
 # 点击坐标
 
