@@ -72,7 +72,7 @@ def click_pop_an() -> bool:
 
 def find_get():
 	logger.info("寻找：恭喜获得")
-	return find_text_exist(A_GET, "恭喜获得", "恭喜获得", max_retries=1, interval=0.1, wait=0.1)
+	return find_text_any(A_GET, "恭喜获得", "恭喜获得", max_retries=1, interval=0.1, wait=0.1)
 
 def click_get(wait=0.1) -> bool:
 	logging.info("点击：恭喜获得")
@@ -102,7 +102,7 @@ def click_blank(wait = WAIT) -> bool:
 # 退出选项框——取消
 def find_quit_cancel_btn():
 	logging.info("寻找：退出选项")
-	return find_text(A_CLOSEGAME,"确定退出","确定退出?")
+	return find_text_base(A_CLOSEGAME,"确定退出","确定退出?")
 
 def click_quit_cancel_btn() -> bool:
 	elem = find_img(A_CANCEL, "cancel", "取消退出", 0.7)
@@ -113,8 +113,8 @@ def click_quit_cancel_btn() -> bool:
 	return False
 
 def is_in_page_main(c=2) -> bool:
-	res = (find_text(A_BENEFITS,"福利","福利", max_retries=c, interval=0.1, wait=0.1)
-		   or find_text(A_UNION,"协会","协会", max_retries=c, interval=0.1, wait=0.1))
+	res = (find_text_base(A_BENEFITS,"福利","福利", max_retries=c, interval=0.1, wait=0.1)
+		   or find_text_base(A_UNION,"协会","协会", max_retries=c, interval=0.1, wait=0.1))
 	if res:
 		logger.info("正在主界面")
 		return True
@@ -133,7 +133,7 @@ def to_page_main() -> bool:
 
 
 def	is_in_page_task(c=2) -> bool:
-	return find_text(A_LIGHT_IN_RICHENG,"日程","闪亮之旅界面",max_retries=c) != 0
+	return find_text_base(A_LIGHT_IN_RICHENG,"日程","闪亮之旅界面",max_retries=c) != 0
 
 def	to_page_task() -> bool:
 	for i in range(5):
@@ -162,8 +162,8 @@ def click_JB(a) -> bool:
 # 	res find_text(A_LIGHT,)
 
 def check_page():
-	start_pos = find_text(A_Click_Start, "点击开始", "点击开始")
-	load_pos = find_text(A_Load, "加载", "加载中")
+	start_pos = find_text_base(A_Click_Start, "点击开始", "点击开始")
+	load_pos = find_text_base(A_Load, "加载", "加载中")
 	quit_btn = click_quit_cancel_btn()
 
 

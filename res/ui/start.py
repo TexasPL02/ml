@@ -52,8 +52,8 @@ def start_game():
         start_time = time()
         while time() - start_time < 30:
             click_pop_an()
-            start_pos = find_text(A_Click_Start, "点击开始", "点击开始")
-            load_pos = find_text(A_Load, "加载", "加载",max_retries=2)
+            start_pos = find_text_base(A_Click_Start, "点击开始", "点击开始")
+            load_pos = find_text_base(A_Load, "加载", "加载",max_retries=2)
 
             if not load_pos and start_pos:
                 logger.info("点击开始按钮")
